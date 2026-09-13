@@ -988,5 +988,29 @@ function escapeHTML(text) {
 
 </script>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDmLfh0AjBqfP3_Y45P7fCOf1jc-Xr1stU",
+    authDomain: "ai-social-2eca8.firebaseapp.com",
+    projectId: "ai-social-2eca8",
+    storageBucket: "ai-social-2eca8.firebasestorage.app",
+    messagingSenderId: "702373228815",
+    appId: "1:702373228815:web:301415921f69d2f1dd8e7a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  console.log("🔥 Firebase connected!");
+</script>
+
 </body>
-  </html>
+</html>
