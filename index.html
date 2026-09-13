@@ -59,6 +59,99 @@ header {
   display: flex;
   gap: 15px;
   font-size: 22px;
+  align-items: center;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.logout-btn {
+  background: #ff6b6b;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.logout-btn:hover {
+  background: #ff5252;
+}
+
+/* AUTH MODAL */
+
+.auth-modal {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.auth-container {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+}
+
+.auth-container h1 {
+  color: #1877f2;
+  margin-bottom: 10px;
+}
+
+.auth-container p {
+  color: #65676b;
+  margin-bottom: 30px;
+}
+
+.google-signin-btn {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  border: 2px solid #1877f2;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #1877f2;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s;
+}
+
+.google-signin-btn:hover {
+  background: #1877f2;
+  color: white;
+}
+
+.hidden {
+  display: none;
 }
 
 /* MAIN LAYOUT */
@@ -349,13 +442,30 @@ header {
   >
 
   <div class="header-icons">
-    🔔 💬 👤
+    🔔 💬 
+    <div id="userSection" class="user-profile hidden">
+      <img id="userPhoto" class="user-avatar" alt="User">
+      <span id="userName" style="color: white; font-size: 14px;"></span>
+      <button class="logout-btn" onclick="logoutUser()">Logout</button>
+    </div>
   </div>
 
 </header>
 
 
-<div class="app">
+<!-- AUTH MODAL -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-container">
+    <h1>🌍 Welcome to AI Social World</h1>
+    <p>Sign in with your Google account to enter the universe</p>
+    <button class="google-signin-btn" onclick="signInWithGoogle()">
+      🔐 Sign in with Google
+    </button>
+  </div>
+</div>
+
+
+<div class="app" id="appContent" style="display: none;">
 
 
 <!-- LEFT SIDEBAR -->
@@ -991,25 +1101,127 @@ function escapeHTML(text) {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
+    getAuth,
+    signInWithPopup,
+    GoogleAuthProvider,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
     getFirestore,
     collection,
     addDoc,
     getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+  // Firebase Configuration
   const firebaseConfig = {
-    apiKey: "AIzaSyDmLfh0AjBqfP3_Y45P7fCOf1jc-Xr1stU",
-    authDomain: "ai-social-2eca8.firebaseapp.com",
-    projectId: "ai-social-2eca8",
-    storageBucket: "ai-social-2eca8.firebasestorage.app",
-    messagingSenderId: "702373228815",
-    appId: "1:702373228815:web:301415921f69d2f1dd8e7a"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
   };
 
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
   const db = getFirestore(app);
+  const googleProvider = new GoogleAuthProvider();
 
-  console.log("🔥 Firebase connected!");
+  // Auth State Listener
+  onAuthStateChanged(auth, (user) => {
+    const authModal = document.getElementById("authModal");
+    const appContent = document.getElementById("appContent");
+    const userSection = document.getElementById("userSection");
+
+    if (user) {
+      // User is signed in
+      authModal.style.display = "none";
+      appContent.style.display = "grid";
+      userSection.classList.remove("hidden");
+
+      // Display user info
+      document.getElementById("userName").textContent = user.displayName || "User";
+      if (user.photoURL) {
+        document.getElementById("userPhoto").src = user.photoURL;
+      } else {
+        document.getElementById("userPhoto").textContent = user.displayName?.charAt(0) || "U";
+      }
+
+      console.log("User signed in:", user.email);
+    } else {
+      // User is signed out
+      authModal.style.display = "flex";
+      appContent.style.display = "none";
+      userSection.classList.add("hidden");
+
+      console.log("User signed out");
+    }
+  });
+
+  // Google Sign-In Function
+  window.signInWithGoogle = async function() {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      console.log("Successfully signed in:", user.email);
+    } catch (error) {
+      console.error("Error during sign-in:", error.message);
+      alert("Sign-in failed: " + error.message);
+    }
+  };
+
+  // Logout Function
+  window.logoutUser = async function() {
+    try {
+      await signOut(auth);
+      console.log("User logged out");
+    } catch (error) {
+      console.error("Error during logout:", error.message);
+    }
+  };
+
+  // Save Post to Firestore
+  window.savePostToFirestore = async function(postText) {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("You must be signed in to post");
+        return;
+      }
+
+      await addDoc(collection(db, "posts"), {
+        text: postText,
+        userId: user.uid,
+        userName: user.displayName,
+        userEmail: user.email,
+        userPhotoURL: user.photoURL,
+        timestamp: new Date(),
+        likes: 0,
+        comments: []
+      });
+
+      console.log("Post saved successfully");
+    } catch (error) {
+      console.error("Error saving post:", error.message);
+      alert("Failed to save post: " + error.message);
+    }
+  };
+
+  // Load Posts from Firestore
+  window.loadPostsFromFirestore = async function() {
+    try {
+      const querySnapshot = await getDocs(collection(db, "posts"));
+      querySnapshot.forEach((doc) => {
+        console.log(doc.id, " => ", doc.data());
+      });
+    } catch (error) {
+      console.error("Error loading posts:", error.message);
+    }
+  };
+
 </script>
 
 </body>
