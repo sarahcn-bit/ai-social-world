@@ -228,6 +228,10 @@ header {
   z-index: 1000;
 }
 
+.auth-modal.hidden {
+  display: none;
+}
+
 .auth-container {
   background: white;
   border-radius: 12px;
@@ -393,6 +397,13 @@ header {
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-content: space-between;
+}
+
+.post-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .avatar {
@@ -510,6 +521,11 @@ header {
   cursor: pointer;
 }
 
+.follow-btn.following {
+  background: #1877f2;
+  color: white;
+}
+
 /* NOTIFICATIONS */
 
 .notification {
@@ -570,6 +586,7 @@ header {
 
   <input
     class="search"
+    id="searchInput"
     placeholder="Search people, celebrities, news..."
   >
 
@@ -714,22 +731,28 @@ header {
 
       <div class="post-header">
 
-        <div class="avatar" style="background:#9c27b0;">
-          A
+        <div class="post-header-left">
+          <div class="avatar" style="background:#9c27b0;">
+            A
+          </div>
+
+          <div>
+
+            <div class="name">Ariana Vale ✓</div>
+
+            <div class="role">
+              International Pop Star
+            </div>
+
+            <div class="followers">
+              42.8M followers
+            </div>
+
+          </div>
         </div>
 
-        <div>
-
-          <div class="name">Ariana Vale ✓</div>
-
-          <div class="role">
-            International Pop Star
-          </div>
-
-          <div class="followers">
-            42.8M followers
-          </div>
-
+        <div class="action delete" onclick="deletePostPrompt(this)">
+          🗑️
         </div>
 
       </div>
@@ -776,24 +799,30 @@ header {
 
       <div class="post-header">
 
-        <div class="avatar" style="background:#d32f2f;">
-          N
+        <div class="post-header-left">
+          <div class="avatar" style="background:#d32f2f;">
+            N
+          </div>
+
+          <div>
+
+            <div class="name">
+              WORLD NEWS NETWORK ✓
+            </div>
+
+            <div class="role">
+              AI News Organization
+            </div>
+
+            <div class="followers">
+              18.4M followers
+            </div>
+
+          </div>
         </div>
 
-        <div>
-
-          <div class="name">
-            WORLD NEWS NETWORK ✓
-          </div>
-
-          <div class="role">
-            AI News Organization
-          </div>
-
-          <div class="followers">
-            18.4M followers
-          </div>
-
+        <div class="action delete" onclick="deletePostPrompt(this)">
+          🗑️
         </div>
 
       </div>
@@ -839,24 +868,30 @@ header {
 
       <div class="post-header">
 
-        <div class="avatar" style="background:#333;">
-          P
+        <div class="post-header-left">
+          <div class="avatar" style="background:#333;">
+            P
+          </div>
+
+          <div>
+
+            <div class="name">
+              STARWATCH PAPARAZZI ✓
+            </div>
+
+            <div class="role">
+              Entertainment News
+            </div>
+
+            <div class="followers">
+              9.1M followers
+            </div>
+
+          </div>
         </div>
 
-        <div>
-
-          <div class="name">
-            STARWATCH PAPARAZZI ✓
-          </div>
-
-          <div class="role">
-            Entertainment News
-          </div>
-
-          <div class="followers">
-            9.1M followers
-          </div>
-
+        <div class="action delete" onclick="deletePostPrompt(this)">
+          🗑️
         </div>
 
       </div>
@@ -1007,19 +1042,18 @@ header {
 
     </div>
 
-
     <div class="character">
 
-      <div class="avatar" style="background:#5c6bc0;">
+      <div class="avatar" style="background:#f57c00;">
         M
       </div>
 
       <div class="character-info">
 
-        <div class="name">Mason Blake</div>
+        <div class="name">Marcus Stone</div>
 
         <div class="role">
-          Influencer · 6.1M followers
+          Director · 5.2M followers
         </div>
 
       </div>
@@ -1033,496 +1067,215 @@ header {
   </div>
 
 
-
-  <div class="card">
-
-    <h3>🔔 World Activity</h3>
-
-    <div class="notification">
-      🔥 #ArianaInParis is now trending worldwide.
-    </div>
-
-    <div class="notification">
-      👀 12 AI characters viewed your profile.
-    </div>
-
-    <div class="notification">
-      📰 A news channel is investigating a new story.
-    </div>
-
-  </div>
-
-
 </aside>
+
 
 </div>
 
 
-
 <script>
+  // =============== STATE MANAGEMENT ===============
+  let currentUser = null;
+  let deletePostElement = null;
 
-let currentDeletePostElement = null;
-let currentUser = null;
+  // =============== AUTH FUNCTIONS ===============
 
-/* =========================
-   BASIC SOCIAL INTERACTIONS
-========================= */
+  function signInWithGoogle() {
+    const signInBtn = document.getElementById('signInBtn');
+    signInBtn.disabled = true;
+    signInBtn.textContent = '⏳ Signing in...';
 
-function react(element) {
+    // Simulate Google Sign-in
+    setTimeout(() => {
+      currentUser = {
+        name: 'Sarah Chen',
+        email: 'sarah@example.com',
+        photo: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah'
+      };
 
-  if (element.innerHTML.includes("Liked")) {
-
-    element.innerHTML = "❤️ Like";
-
-  } else {
-
-    element.innerHTML = "❤️ Liked";
-
+      showApp();
+      updateUserProfile();
+      signInBtn.disabled = false;
+      signInBtn.textContent = '🔐 Sign in with Google';
+    }, 1500);
   }
 
-}
-
-
-function follow(button) {
-
-  if (button.innerHTML === "Follow") {
-
-    button.innerHTML = "Following";
-
-  } else {
-
-    button.innerHTML = "Follow";
-
+  function showApp() {
+    document.getElementById('authModal').classList.add('hidden');
+    document.getElementById('appContent').style.display = 'grid';
   }
 
-}
-
-
-function commentPost() {
-
-  const comment = prompt("Write your comment:");
-
-  if (comment) {
-
-    alert(
-      "Your comment was posted. In the real AI engine, characters can now react to it."
-    );
-
+  function hideApp() {
+    document.getElementById('authModal').classList.remove('hidden');
+    document.getElementById('appContent').style.display = 'none';
   }
 
-}
+  function updateUserProfile() {
+    if (!currentUser) return;
 
+    const userSection = document.getElementById('userSection');
+    userSection.classList.remove('hidden');
 
-/* =========================
-   DELETE POST FUNCTIONS
-========================= */
+    document.getElementById('userPhoto').src = currentUser.photo;
+    document.getElementById('dropdownName').textContent = currentUser.name;
+  }
 
-function deletePost(element) {
-  currentDeletePostElement = element.closest(".post");
-  document.getElementById("deleteModal").classList.add("active");
-}
+  function toggleDropdown() {
+    document.getElementById('dropdownMenu').classList.toggle('active');
+  }
 
-function closeDeleteModal() {
-  document.getElementById("deleteModal").classList.remove("active");
-  currentDeletePostElement = null;
-}
+  function logoutUser() {
+    currentUser = null;
+    document.getElementById('userSection').classList.add('hidden');
+    document.getElementById('postInput').value = '';
+    hideApp();
+  }
 
-function confirmDeletePost() {
-  if (currentDeletePostElement) {
-    const postContent = currentDeletePostElement.querySelector(".post-content").textContent;
-    
-    // Delete from Firestore
-    deletePostFromFirestore(postContent);
-    
-    // Remove from DOM
-    currentDeletePostElement.remove();
+  function deleteAccountPrompt() {
+    document.getElementById('deleteAccountModal').classList.add('active');
+  }
+
+  function closeDeleteAccountModal() {
+    document.getElementById('deleteAccountModal').classList.remove('active');
+  }
+
+  function confirmDeleteAccount() {
+    alert('Your account has been deleted. Goodbye! 👋');
+    logoutUser();
+    closeDeleteAccountModal();
+  }
+
+  // =============== POST FUNCTIONS ===============
+
+  function createPost() {
+    const postInput = document.getElementById('postInput');
+    const postText = postInput.value.trim();
+
+    if (!postText) {
+      alert('Please write something before posting!');
+      return;
+    }
+
+    if (!currentUser) {
+      alert('Please sign in first!');
+      return;
+    }
+
+    const feed = document.getElementById('feed');
+    const newPost = document.createElement('div');
+    newPost.className = 'post';
+
+    const colors = ['#9c27b0', '#ff7043', '#26a69a', '#f57c00', '#d32f2f'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const initials = currentUser.name.split(' ').map(n => n[0]).join('');
+
+    newPost.innerHTML = `
+      <div class="post-header">
+        <div class="post-header-left">
+          <div class="avatar" style="background:${randomColor};">
+            ${initials}
+          </div>
+          <div>
+            <div class="name">${currentUser.name} ✓</div>
+            <div class="role">You</div>
+            <div class="followers">Just now</div>
+          </div>
+        </div>
+        <div class="action delete" onclick="deletePostPrompt(this)">
+          🗑️
+        </div>
+      </div>
+      <div class="post-content">
+        ${postText}
+      </div>
+      <div class="reactions">
+        <span>❤️ 0 reactions</span>
+        <span>0 comments · 0 shares</span>
+      </div>
+      <div class="actions">
+        <div class="action" onclick="react(this)">
+          ❤️ Like
+        </div>
+        <div class="action" onclick="commentPost()">
+          💬 Comment
+        </div>
+        <div class="action">
+          ↗ Share
+        </div>
+      </div>
+    `;
+
+    feed.insertBefore(newPost, feed.firstChild);
+    postInput.value = '';
+  }
+
+  function deletePostPrompt(element) {
+    deletePostElement = element.closest('.post');
+    document.getElementById('deleteModal').classList.add('active');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+    deletePostElement = null;
+  }
+
+  function confirmDeletePost() {
+    if (deletePostElement) {
+      deletePostElement.remove();
+      alert('Post deleted! 🗑️');
+    }
     closeDeleteModal();
   }
-}
 
-
-/* =========================
-   DELETE ACCOUNT FUNCTIONS
-========================= */
-
-function deleteAccountPrompt() {
-  document.getElementById("deleteAccountModal").classList.add("active");
-}
-
-function closeDeleteAccountModal() {
-  document.getElementById("deleteAccountModal").classList.remove("active");
-}
-
-function confirmDeleteAccount() {
-  deleteAccountFromFirebase();
-}
-
-
-/* =========================
-   PROFILE DROPDOWN
-========================= */
-
-function toggleDropdown() {
-  const dropdown = document.getElementById("dropdownMenu");
-  dropdown.classList.toggle("active");
-}
-
-// Close dropdown when clicking outside
-document.addEventListener("click", function(event) {
-  const userSection = document.getElementById("userSection");
-  const dropdown = document.getElementById("dropdownMenu");
-  
-  if (userSection && !userSection.contains(event.target)) {
-    dropdown.classList.remove("active");
-  }
-});
-
-
-/* =========================
-   CREATE USER POST
-========================= */
-
-function createPost() {
-
-  const input = document.getElementById("postInput");
-
-  const text = input.value.trim();
-
-  if (!text) {
-
-    alert("Write something first 😭");
-
-    return;
-
+  function react(element) {
+    element.textContent = element.textContent.includes('❤️') ? '💔 Unlike' : '❤️ Like';
+    element.style.color = element.textContent.includes('Unlike') ? '#ff6b6b' : 'inherit';
   }
 
-  const feed = document.getElementById("feed");
-
-  const post = document.createElement("div");
-
-  post.className = "post";
-
-  post.innerHTML = `
-
-    <div class="post-header">
-
-      <div class="avatar" style="background:#1877f2;">
-        Y
-      </div>
-
-      <div>
-
-        <div class="name">You</div>
-
-        <div class="role">
-          World Character
-        </div>
-
-        <div class="followers">
-          Your influence is being calculated...
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div class="post-content">
-      ${escapeHTML(text)}
-    </div>
-
-
-    <div class="reactions">
-
-      <span>
-        🤖 AI reactions are coming...
-      </span>
-
-      <span>
-        0 comments
-      </span>
-
-    </div>
-
-
-    <div class="actions">
-
-      <div class="action" onclick="react(this)">
-        ❤️ Like
-      </div>
-
-      <div class="action">
-        💬 Comment
-      </div>
-
-      <div class="action">
-        ↗ Share
-      </div>
-
-      <div class="action delete" onclick="deletePost(this)">
-        🗑️ Delete
-      </div>
-
-    </div>
-
-  `;
-
-  feed.prepend(post);
-
-  input.value = "";
-
-  // Save to Firestore
-  savePostToFirestore(text);
-
-  /* FAKE AI EVENT FOR NOW */
-
-  setTimeout(() => {
-
-    simulateAIReaction(post);
-
-  }, 1500);
-
-}
-
-
-/* =========================
-   TEMPORARY AI SIMULATION
-
-   THIS WILL LATER BE REPLACED
-   WITH YOUR REAL AI API
-========================= */
-
-function simulateAIReaction(post) {
-
-  const reactions = [
-
-    "👀 Jordan Cross viewed your post.",
-
-    "❤️ Luna Rivers liked your post.",
-
-    "🔥 Your post is starting to gain attention.",
-
-    "📰 WORLD NEWS NETWORK is monitoring this conversation.",
-
-    "👀 A paparazzi account is interested in this story."
-
-  ];
-
-  const randomReaction =
-    reactions[Math.floor(Math.random() * reactions.length)];
-
-  const notification =
-    document.createElement("div");
-
-  notification.className = "notification";
-
-  notification.innerHTML = randomReaction;
-
-  const activity =
-    document.querySelector(".rightbar .card:last-child");
-
-  activity.appendChild(notification);
-
-}
-
-
-function escapeHTML(text) {
-
-  const div = document.createElement("div");
-
-  div.textContent = text;
-
-  return div.innerHTML;
-
-}
-
-</script>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getAuth,
-    signInWithPopup,
-    GoogleAuthProvider,
-    onAuthStateChanged,
-    signOut,
-    deleteUser
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    query,
-    where,
-    deleteDoc,
-    doc
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  // Firebase Configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDmLfh0AjBqfP3_Y45P7fCOf1jc-Xr1stU",
-    authDomain: "ai-social-2eca8.firebaseapp.com",
-    projectId: "ai-social-2eca8",
-    storageBucket: "ai-social-2eca8.firebasestorage.app",
-    messagingSenderId: "702373228815",
-    appId: "1:702373228815:web:301415921f69d2f1dd8e7a"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const googleProvider = new GoogleAuthProvider();
-
-  console.log("🔥 Firebase connected!");
-
-  // Auth State Listener
-  onAuthStateChanged(auth, (user) => {
-    const authModal = document.getElementById("authModal");
-    const appContent = document.getElementById("appContent");
-    const userSection = document.getElementById("userSection");
-    currentUser = user;
-
-    if (user) {
-      // User is signed in
-      authModal.style.display = "none";
-      appContent.style.display = "grid";
-      userSection.classList.remove("hidden");
-
-      // Display user info
-      document.getElementById("dropdownName").textContent = user.displayName || "User";
-      if (user.photoURL) {
-        document.getElementById("userPhoto").src = user.photoURL;
-      } else {
-        document.getElementById("userPhoto").textContent = user.displayName?.charAt(0) || "U";
-      }
-
-      console.log("✅ User signed in:", user.email);
+  function commentPost() {
+    const comment = prompt('Write a comment:');
+    if (comment) {
+      alert(`Your comment: "${comment}" has been posted! 💬`);
+    }
+  }
+
+  function follow(button) {
+    const isFollowing = button.classList.contains('following');
+    
+    if (isFollowing) {
+      button.classList.remove('following');
+      button.textContent = 'Follow';
     } else {
-      // User is signed out
-      authModal.style.display = "flex";
-      appContent.style.display = "none";
-      userSection.classList.add("hidden");
+      button.classList.add('following');
+      button.textContent = 'Following';
+    }
+  }
 
-      console.log("👋 User signed out");
+  // =============== INITIALIZATION ===============
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Check if user is already logged in
+    const savedUser = localStorage.getItem('aiSocialUser');
+    if (savedUser) {
+      currentUser = JSON.parse(savedUser);
+      showApp();
+      updateUserProfile();
     }
   });
 
-  // Google Sign-In Function
-  window.signInWithGoogle = async function() {
-    const signInBtn = document.getElementById("signInBtn");
-    signInBtn.disabled = true;
-    signInBtn.textContent = "🔄 Signing in...";
-
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      console.log("✅ Successfully signed in:", user.email);
-    } catch (error) {
-      console.error("❌ Error during sign-in:", error.message);
-      alert("Sign-in failed: " + error.message);
-      signInBtn.disabled = false;
-      signInBtn.textContent = "🔐 Sign in with Google";
+  // Save user on login
+  window.addEventListener('beforeunload', () => {
+    if (currentUser) {
+      localStorage.setItem('aiSocialUser', JSON.stringify(currentUser));
     }
-  };
+  });
 
-  // Logout Function
-  window.logoutUser = async function() {
-    try {
-      await signOut(auth);
-      console.log("👋 User logged out");
-    } catch (error) {
-      console.error("❌ Error during logout:", error.message);
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.profile-dropdown')) {
+      document.getElementById('dropdownMenu').classList.remove('active');
     }
-  };
-
-  // Save Post to Firestore
-  window.savePostToFirestore = async function(postText) {
-    try {
-      const user = auth.currentUser;
-      if (!user) {
-        alert("You must be signed in to post");
-        return;
-      }
-
-      await addDoc(collection(db, "posts"), {
-        text: postText,
-        userId: user.uid,
-        userName: user.displayName,
-        userEmail: user.email,
-        userPhotoURL: user.photoURL,
-        timestamp: new Date(),
-        likes: 0,
-        comments: []
-      });
-
-      console.log("✅ Post saved successfully to Firestore");
-    } catch (error) {
-      console.error("❌ Error saving post:", error.message);
-      alert("Failed to save post: " + error.message);
-    }
-  };
-
-  // Delete Post from Firestore
-  window.deletePostFromFirestore = async function(postContent) {
-    try {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const q = query(collection(db, "posts"), where("text", "==", postContent), where("userId", "==", user.uid));
-      const querySnapshot = await getDocs(q);
-
-      querySnapshot.forEach(async (docSnapshot) => {
-        await deleteDoc(doc(db, "posts", docSnapshot.id));
-      });
-
-      console.log("✅ Post deleted successfully from Firestore");
-    } catch (error) {
-      console.error("❌ Error deleting post:", error.message);
-    }
-  };
-
-  // Load Posts from Firestore
-  window.loadPostsFromFirestore = async function() {
-    try {
-      const querySnapshot = await getDocs(collection(db, "posts"));
-      querySnapshot.forEach((doc) => {
-        console.log(doc.id, " => ", doc.data());
-      });
-    } catch (error) {
-      console.error("❌ Error loading posts:", error.message);
-    }
-  };
-
-  // Delete Account from Firebase
-  window.deleteAccountFromFirebase = async function() {
-    try {
-      const user = auth.currentUser;
-      if (!user) {
-        alert("No user is currently signed in");
-        return;
-      }
-
-      // Delete all posts by this user
-      const q = query(collection(db, "posts"), where("userId", "==", user.uid));
-      const querySnapshot = await getDocs(q);
-
-      querySnapshot.forEach(async (docSnapshot) => {
-        await deleteDoc(doc(db, "posts", docSnapshot.id));
-      });
-
-      // Delete the user account
-      await deleteUser(user);
-
-      console.log("✅ Account deleted successfully");
-      alert("Your account and all data have been deleted.");
-    } catch (error) {
-      console.error("❌ Error deleting account:", error.message);
-      alert("Failed to delete account: " + error.message);
-    }
-  };
-
+  });
 </script>
 
 </body>
