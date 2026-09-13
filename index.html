@@ -87,18 +87,130 @@ header {
   object-fit: cover;
 }
 
-.logout-btn {
-  background: #ff6b6b;
-  border: none;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
+.profile-dropdown {
+  position: relative;
+  display: inline-block;
 }
 
-.logout-btn:hover {
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 150px;
+  margin-top: 5px;
+}
+
+.dropdown-menu.active {
+  display: block;
+}
+
+.dropdown-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  color: #1c1e21;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: #f0f2f5;
+}
+
+.dropdown-item.danger {
+  color: #ff6b6b;
+}
+
+.dropdown-item.danger:hover {
+  background: #ffe0e0;
+}
+
+/* MODALS */
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+}
+
+.modal-content h2 {
+  color: #1c1e21;
+  margin-bottom: 15px;
+}
+
+.modal-content p {
+  color: #65676b;
+  margin-bottom: 25px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background: #1877f2;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #1264d8;
+}
+
+.btn-danger {
+  background: #ff6b6b;
+  color: white;
+}
+
+.btn-danger:hover {
   background: #ff5252;
+}
+
+.btn-secondary {
+  background: #e4e6eb;
+  color: #1c1e21;
+}
+
+.btn-secondary:hover {
+  background: #d0d2d7;
 }
 
 /* AUTH MODAL */
@@ -353,6 +465,14 @@ header {
   background: #f0f2f5;
 }
 
+.action.delete {
+  color: #ff6b6b;
+}
+
+.action.delete:hover {
+  background: #ffe0e0;
+}
+
 /* RIGHT SIDE */
 
 .trending-item {
@@ -456,15 +576,46 @@ header {
   <div class="header-icons">
     🔔 💬 
     <div id="userSection" class="user-profile hidden">
-      <div class="user-avatar">
-        <img id="userPhoto" alt="User">
+      <div class="profile-dropdown">
+        <div class="user-avatar" onclick="toggleDropdown()" style="cursor: pointer;">
+          <img id="userPhoto" alt="User">
+        </div>
+        <div id="dropdownMenu" class="dropdown-menu">
+          <div class="dropdown-item" onclick="toggleDropdown()">👤 <span id="dropdownName">User</span></div>
+          <div class="dropdown-item danger" onclick="toggleDropdown(); deleteAccountPrompt()">🗑️ Delete Account</div>
+          <div class="dropdown-item" onclick="toggleDropdown(); logoutUser()">🚪 Logout</div>
+        </div>
       </div>
-      <span id="userName" style="color: white; font-size: 14px;"></span>
-      <button class="logout-btn" onclick="logoutUser()">Logout</button>
     </div>
   </div>
 
 </header>
+
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <h2>⚠️ Delete Post?</h2>
+    <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="closeDeleteModal()">No, Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeletePost()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- DELETE ACCOUNT CONFIRMATION MODAL -->
+<div id="deleteAccountModal" class="modal">
+  <div class="modal-content">
+    <h2>⚠️ Delete Account?</h2>
+    <p>This will permanently delete your account and all your data. This cannot be undone.</p>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="closeDeleteAccountModal()">No, Keep Account</button>
+      <button class="btn btn-danger" onclick="confirmDeleteAccount()">Yes, Delete Account</button>
+    </div>
+  </div>
+</div>
 
 
 <!-- AUTH MODAL -->
@@ -910,6 +1061,9 @@ header {
 
 <script>
 
+let currentDeletePostElement = null;
+let currentUser = null;
+
 /* =========================
    BASIC SOCIAL INTERACTIONS
 ========================= */
@@ -957,6 +1111,71 @@ function commentPost() {
   }
 
 }
+
+
+/* =========================
+   DELETE POST FUNCTIONS
+========================= */
+
+function deletePost(element) {
+  currentDeletePostElement = element.closest(".post");
+  document.getElementById("deleteModal").classList.add("active");
+}
+
+function closeDeleteModal() {
+  document.getElementById("deleteModal").classList.remove("active");
+  currentDeletePostElement = null;
+}
+
+function confirmDeletePost() {
+  if (currentDeletePostElement) {
+    const postContent = currentDeletePostElement.querySelector(".post-content").textContent;
+    
+    // Delete from Firestore
+    deletePostFromFirestore(postContent);
+    
+    // Remove from DOM
+    currentDeletePostElement.remove();
+    closeDeleteModal();
+  }
+}
+
+
+/* =========================
+   DELETE ACCOUNT FUNCTIONS
+========================= */
+
+function deleteAccountPrompt() {
+  document.getElementById("deleteAccountModal").classList.add("active");
+}
+
+function closeDeleteAccountModal() {
+  document.getElementById("deleteAccountModal").classList.remove("active");
+}
+
+function confirmDeleteAccount() {
+  deleteAccountFromFirebase();
+}
+
+
+/* =========================
+   PROFILE DROPDOWN
+========================= */
+
+function toggleDropdown() {
+  const dropdown = document.getElementById("dropdownMenu");
+  dropdown.classList.toggle("active");
+}
+
+// Close dropdown when clicking outside
+document.addEventListener("click", function(event) {
+  const userSection = document.getElementById("userSection");
+  const dropdown = document.getElementById("dropdownMenu");
+  
+  if (userSection && !userSection.contains(event.target)) {
+    dropdown.classList.remove("active");
+  }
+});
 
 
 /* =========================
@@ -1040,6 +1259,10 @@ function createPost() {
         ↗ Share
       </div>
 
+      <div class="action delete" onclick="deletePost(this)">
+        🗑️ Delete
+      </div>
+
     </div>
 
   `;
@@ -1047,6 +1270,9 @@ function createPost() {
   feed.prepend(post);
 
   input.value = "";
+
+  // Save to Firestore
+  savePostToFirestore(text);
 
   /* FAKE AI EVENT FOR NOW */
 
@@ -1119,13 +1345,18 @@ function escapeHTML(text) {
     signInWithPopup,
     GoogleAuthProvider,
     onAuthStateChanged,
-    signOut
+    signOut,
+    deleteUser
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import {
     getFirestore,
     collection,
     addDoc,
-    getDocs
+    getDocs,
+    query,
+    where,
+    deleteDoc,
+    doc
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   // Firebase Configuration
@@ -1151,6 +1382,7 @@ function escapeHTML(text) {
     const authModal = document.getElementById("authModal");
     const appContent = document.getElementById("appContent");
     const userSection = document.getElementById("userSection");
+    currentUser = user;
 
     if (user) {
       // User is signed in
@@ -1159,7 +1391,7 @@ function escapeHTML(text) {
       userSection.classList.remove("hidden");
 
       // Display user info
-      document.getElementById("userName").textContent = user.displayName || "User";
+      document.getElementById("dropdownName").textContent = user.displayName || "User";
       if (user.photoURL) {
         document.getElementById("userPhoto").src = user.photoURL;
       } else {
@@ -1232,6 +1464,25 @@ function escapeHTML(text) {
     }
   };
 
+  // Delete Post from Firestore
+  window.deletePostFromFirestore = async function(postContent) {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const q = query(collection(db, "posts"), where("text", "==", postContent), where("userId", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+
+      querySnapshot.forEach(async (docSnapshot) => {
+        await deleteDoc(doc(db, "posts", docSnapshot.id));
+      });
+
+      console.log("✅ Post deleted successfully from Firestore");
+    } catch (error) {
+      console.error("❌ Error deleting post:", error.message);
+    }
+  };
+
   // Load Posts from Firestore
   window.loadPostsFromFirestore = async function() {
     try {
@@ -1241,6 +1492,34 @@ function escapeHTML(text) {
       });
     } catch (error) {
       console.error("❌ Error loading posts:", error.message);
+    }
+  };
+
+  // Delete Account from Firebase
+  window.deleteAccountFromFirebase = async function() {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("No user is currently signed in");
+        return;
+      }
+
+      // Delete all posts by this user
+      const q = query(collection(db, "posts"), where("userId", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+
+      querySnapshot.forEach(async (docSnapshot) => {
+        await deleteDoc(doc(db, "posts", docSnapshot.id));
+      });
+
+      // Delete the user account
+      await deleteUser(user);
+
+      console.log("✅ Account deleted successfully");
+      alert("Your account and all data have been deleted.");
+    } catch (error) {
+      console.error("❌ Error deleting account:", error.message);
+      alert("Failed to delete account: " + error.message);
     }
   };
 
