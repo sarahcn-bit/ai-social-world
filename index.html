@@ -78,6 +78,13 @@ header {
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  overflow: hidden;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .logout-btn {
@@ -148,6 +155,11 @@ header {
 .google-signin-btn:hover {
   background: #1877f2;
   color: white;
+}
+
+.google-signin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .hidden {
@@ -444,7 +456,9 @@ header {
   <div class="header-icons">
     🔔 💬 
     <div id="userSection" class="user-profile hidden">
-      <img id="userPhoto" class="user-avatar" alt="User">
+      <div class="user-avatar">
+        <img id="userPhoto" alt="User">
+      </div>
       <span id="userName" style="color: white; font-size: 14px;"></span>
       <button class="logout-btn" onclick="logoutUser()">Logout</button>
     </div>
@@ -458,7 +472,7 @@ header {
   <div class="auth-container">
     <h1>🌍 Welcome to AI Social World</h1>
     <p>Sign in with your Google account to enter the universe</p>
-    <button class="google-signin-btn" onclick="signInWithGoogle()">
+    <button id="signInBtn" class="google-signin-btn" onclick="signInWithGoogle()">
       🔐 Sign in with Google
     </button>
   </div>
@@ -1116,12 +1130,12 @@ function escapeHTML(text) {
 
   // Firebase Configuration
   const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyDmLfh0AjBqfP3_Y45P7fCOf1jc-Xr1stU",
+    authDomain: "ai-social-2eca8.firebaseapp.com",
+    projectId: "ai-social-2eca8",
+    storageBucket: "ai-social-2eca8.firebasestorage.app",
+    messagingSenderId: "702373228815",
+    appId: "1:702373228815:web:301415921f69d2f1dd8e7a"
   };
 
   // Initialize Firebase
@@ -1129,6 +1143,8 @@ function escapeHTML(text) {
   const auth = getAuth(app);
   const db = getFirestore(app);
   const googleProvider = new GoogleAuthProvider();
+
+  console.log("🔥 Firebase connected!");
 
   // Auth State Listener
   onAuthStateChanged(auth, (user) => {
@@ -1150,26 +1166,32 @@ function escapeHTML(text) {
         document.getElementById("userPhoto").textContent = user.displayName?.charAt(0) || "U";
       }
 
-      console.log("User signed in:", user.email);
+      console.log("✅ User signed in:", user.email);
     } else {
       // User is signed out
       authModal.style.display = "flex";
       appContent.style.display = "none";
       userSection.classList.add("hidden");
 
-      console.log("User signed out");
+      console.log("👋 User signed out");
     }
   });
 
   // Google Sign-In Function
   window.signInWithGoogle = async function() {
+    const signInBtn = document.getElementById("signInBtn");
+    signInBtn.disabled = true;
+    signInBtn.textContent = "🔄 Signing in...";
+
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      console.log("Successfully signed in:", user.email);
+      console.log("✅ Successfully signed in:", user.email);
     } catch (error) {
-      console.error("Error during sign-in:", error.message);
+      console.error("❌ Error during sign-in:", error.message);
       alert("Sign-in failed: " + error.message);
+      signInBtn.disabled = false;
+      signInBtn.textContent = "🔐 Sign in with Google";
     }
   };
 
@@ -1177,9 +1199,9 @@ function escapeHTML(text) {
   window.logoutUser = async function() {
     try {
       await signOut(auth);
-      console.log("User logged out");
+      console.log("👋 User logged out");
     } catch (error) {
-      console.error("Error during logout:", error.message);
+      console.error("❌ Error during logout:", error.message);
     }
   };
 
@@ -1203,9 +1225,9 @@ function escapeHTML(text) {
         comments: []
       });
 
-      console.log("Post saved successfully");
+      console.log("✅ Post saved successfully to Firestore");
     } catch (error) {
-      console.error("Error saving post:", error.message);
+      console.error("❌ Error saving post:", error.message);
       alert("Failed to save post: " + error.message);
     }
   };
@@ -1218,7 +1240,7 @@ function escapeHTML(text) {
         console.log(doc.id, " => ", doc.data());
       });
     } catch (error) {
-      console.error("Error loading posts:", error.message);
+      console.error("❌ Error loading posts:", error.message);
     }
   };
 
